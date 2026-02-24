@@ -135,7 +135,7 @@ makeup_attendance/
 ---
 
 ### 📝 Make-Up Classes Section
-![MakeUp Classes](SnapShots/MakeUp_Classessection.png)
+![MakeUp Classes](SnapShots/MakeUp_Classes_section.png)
 
 ---
 
