@@ -1,0 +1,167 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}AI Analytics – EduTrack{% endblock %}
+{% block topbar_title %}AI Analytics{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title" style="display:flex;align-items:center;gap:10px">
+      AI Analytics
+      <span class="ai-badge"><i class="fas fa-robot"></i> Powered by AI</span>
+    </h1>
+    <p class="page-subtitle">Intelligent insights, predictions & scheduling recommendations</p>
+  </div>
+</div>
+
+<!-- Course Selector -->
+<div class="card mb-4">
+  <div class="card-body" style="padding:14px 20px">
+    <form method="get" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:.875rem;font-weight:600"><i class="fas fa-book" style="color:var(--primary)"></i> Analyze Course:</label>
+      <select name="course" class="form-control" style="width:280px" onchange="this.form.submit()">
+        <option value="">Select a course...</option>
+        {% for course in courses %}
+        <option value="{{ course.pk }}" {% if selected_course_id == course.pk|stringformat:"s" %}selected{% endif %}>
+          {{ course.code }} – {{ course.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+</div>
+
+{% if selected_course_id %}
+
+<!-- Prediction Card -->
+{% if prediction %}
+<div class="grid-3 mb-4">
+  <div class="card">
+    <div class="card-body" style="text-align:center">
+      <div style="font-size:2.5rem;font-weight:900;color:var(--primary)">{{ prediction.predicted_count }}</div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Predicted Next Session Attendance</div>
+      <div class="progress mt-3"><div class="progress-bar" style="width:{{ prediction.predicted_rate }}%"></div></div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">{{ prediction.predicted_rate }}% of {{ prediction.enrolled_count }} enrolled</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body" style="text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:6px">
+        {% if prediction.rush_level == 'high' %}🔴
+        {% elif prediction.rush_level == 'medium' %}🟡
+        {% else %}🟢{% endif %}
+      </div>
+      <div style="font-size:1.1rem;font-weight:800;text-transform:capitalize">{{ prediction.rush_level }} Rush</div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Expected class demand</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body" style="text-align:center">
+      <div style="font-size:2.5rem;font-weight:900;color:var(--success)">{{ prediction.confidence|floatformat:0 }}%</div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Prediction Confidence</div>
+      <div class="progress mt-3"><div class="progress-bar" style="width:{{ prediction.confidence|floatformat:0 }}%;background:linear-gradient(90deg,var(--success),#34d399)"></div></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-2">
+  <!-- Insights -->
+  <div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-lightbulb" style="color:var(--accent)"></i> AI Insights</span>
+      </div>
+      <div class="card-body">
+        {% if insights and insights.insights %}
+        {% for insight in insights.insights %}
+        <div class="alert alert-{{ insight.severity }}" style="margin-bottom:10px">
+          <span style="font-size:1.2rem">{{ insight.icon }}</span>
+          <span>{{ insight.text }}</span>
+        </div>
+        {% endfor %}
+        <div style="font-size:.8rem;color:var(--text-muted);text-align:center;margin-top:12px">
+          Based on {{ insights.total_classes }} completed sessions
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:32px">
+          <i class="fas fa-chart-bar"></i>
+          <p>Complete more makeup sessions to generate insights</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- About AI Features -->
+    <div class="card" style="background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(139,92,246,.04));border-color:rgba(99,102,241,.2)">
+      <div class="card-header" style="border-color:rgba(99,102,241,.2)">
+        <span class="card-title"><i class="fas fa-brain" style="color:#8b5cf6"></i> AI Capabilities</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          {% for feature, desc in forloop|default:'' %}{% endfor %}
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="width:32px;height:32px;background:rgba(99,102,241,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-chart-line" style="color:var(--primary);font-size:.9rem"></i></span>
+            <div><div style="font-weight:600;font-size:.875rem">Attendance Prediction</div><div style="font-size:.78rem;color:var(--text-muted)">Forecasts expected student count using historical patterns, day-of-week, and time factors</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="width:32px;height:32px;background:rgba(14,165,233,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-calendar-check" style="color:var(--secondary);font-size:.9rem"></i></span>
+            <div><div style="font-weight:600;font-size:.875rem">Smart Scheduling</div><div style="font-size:.78rem;color:var(--text-muted)">Recommends optimal time slots to maximize attendance based on student engagement data</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="width:32px;height:32px;background:rgba(16,185,129,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-bell" style="color:var(--success);font-size:.9rem"></i></span>
+            <div><div style="font-weight:600;font-size:.875rem">Automated Alerts</div><div style="font-size:.78rem;color:var(--text-muted)">Instantly notifies all enrolled students when a makeup class is scheduled or code is activated</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="width:32px;height:32px;background:rgba(245,158,11,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-camera" style="color:var(--accent);font-size:.9rem"></i></span>
+            <div><div style="font-weight:600;font-size:.875rem">Face Recognition (Bonus)</div><div style="font-size:.78rem;color:var(--text-muted)">Optional face-based attendance verification. Enable by installing face_recognition library</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Recommendations -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-magic" style="color:#8b5cf6"></i> Optimal Time Slots</span>
+      <span class="ai-badge"><i class="fas fa-robot"></i> AI</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:14px">AI-recommended slots for maximum attendance. Click to schedule.</p>
+      {% if recommendations %}
+      {% for rec in recommendations %}
+      <a href="{% url 'schedule_makeup' %}?course={{ selected_course_id }}" style="text-decoration:none">
+        <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;transition:all .2s;cursor:pointer" onmouseover="this.style.borderColor='var(--primary)';this.style.background='rgba(99,102,241,.03)'" onmouseout="this.style.borderColor='var(--border)';this.style.background=''">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-weight:700;font-size:.9rem;color:var(--text)">{{ rec.day }}, {{ rec.date }}</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <div style="background:rgba(16,185,129,.1);color:var(--success);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:10px">★ {{ rec.score }}</div>
+            </div>
+          </div>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:6px"><i class="fas fa-clock"></i> {{ rec.start_time }} – {{ rec.end_time }}</div>
+          <div style="font-size:.75rem;color:var(--primary)"><i class="fas fa-lightbulb"></i> {{ rec.reason }}</div>
+        </div>
+      </a>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state" style="padding:32px"><i class="fas fa-calendar"></i><p>No recommendations available</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- No course selected -->
+<div class="card">
+  <div style="padding:80px 40px;text-align:center">
+    <div style="font-size:4rem;margin-bottom:16px">🤖</div>
+    <h3 style="font-size:1.3rem;font-weight:700;margin-bottom:8px">Select a Course to Begin</h3>
+    <p style="color:var(--text-muted);font-size:.875rem;max-width:400px;margin:0 auto">Choose a course from the dropdown above to see AI-powered insights, attendance predictions, and optimal scheduling recommendations.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

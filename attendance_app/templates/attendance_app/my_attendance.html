@@ -1,0 +1,95 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}My Attendance – EduTrack{% endblock %}
+{% block topbar_title %}My Attendance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">My Attendance History</h1>
+    <p class="page-subtitle">All your makeup class attendance records</p>
+  </div>
+  <a href="{% url 'mark_attendance' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Mark Attendance</a>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+    <div><div class="stat-number">{{ records.count }}</div><div class="stat-label">Total Attended</div></div>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+  <div class="card-body" style="padding:12px 20px">
+    <form method="get" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:.8rem;font-weight:600">Filter by Course:</label>
+      <select name="course" class="form-control" style="width:200px" onchange="this.form.submit()">
+        <option value="">All Courses</option>
+        {% for course in courses %}
+        <option value="{{ course.code }}" {% if course_filter == course.code %}selected{% endif %}>{{ course.code }} – {{ course.name }}</option>
+        {% endfor %}
+      </select>
+      {% if course_filter %}<a href="{% url 'my_attendance' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body" style="padding:0">
+    {% if records %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Session</th>
+            <th>Course</th>
+            <th>Date</th>
+            <th>Marked At</th>
+            <th>Method</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for record in records %}
+        <tr>
+          <td style="color:var(--text-muted);font-size:.8rem">{{ forloop.counter }}</td>
+          <td>
+            <div style="font-weight:600;font-size:.875rem">{{ record.makeup_class.title }}</div>
+            <div style="font-size:.75rem;color:var(--text-muted)">{{ record.makeup_class.venue }}</div>
+          </td>
+          <td><span class="badge badge-primary">{{ record.makeup_class.course.code }}</span></td>
+          <td style="font-size:.875rem">{{ record.makeup_class.scheduled_date|date:"M d, Y" }}</td>
+          <td style="font-size:.8rem;color:var(--text-muted)">{{ record.marked_at|date:"M d, h:i A" }}</td>
+          <td>
+            {% if record.verification_method == 'code' %}
+            <span class="badge badge-primary"><i class="fas fa-key"></i> Code</span>
+            {% elif record.verification_method == 'face' %}
+            <span class="badge" style="background:rgba(139,92,246,.1);color:#7c3aed"><i class="fas fa-camera"></i> Face</span>
+            {% else %}
+            <span class="badge badge-scheduled">Manual</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if record.is_present %}
+            <span class="badge badge-active"><i class="fas fa-check"></i> Present</span>
+            {% else %}
+            <span class="badge badge-cancelled"><i class="fas fa-times"></i> Absent</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:64px">
+      <i class="fas fa-clipboard-list"></i>
+      <p>No attendance records found{% if course_filter %} for this course{% endif %}</p>
+      <a href="{% url 'mark_attendance' %}" class="btn btn-primary btn-sm mt-3">Mark Attendance</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

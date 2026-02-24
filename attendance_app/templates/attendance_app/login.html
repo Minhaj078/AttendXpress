@@ -1,0 +1,100 @@
+{% extends 'attendance_app/base.html' %}
+{% block auth_content %}
+<style>
+  .auth-bg {
+    min-height: 100vh; display: flex;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0ea5e9 100%);
+  }
+  .auth-left {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: white;
+  }
+  .auth-hero { max-width: 420px; }
+  .auth-hero h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+  .auth-hero p { font-size: 1rem; opacity: .85; line-height: 1.7; }
+  .feature-list { list-style: none; margin-top: 32px; }
+  .feature-list li { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: .9rem; opacity: .9; }
+  .feature-list li i { width: 24px; height: 24px; background: rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .auth-right {
+    width: 440px; background: white; display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .auth-box { width: 100%; max-width: 360px; }
+  .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+  .auth-logo-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #0ea5e9);
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;
+  }
+  .auth-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+  .auth-subtitle { font-size: .875rem; color: #64748b; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: .8rem; font-weight: 600; display: block; margin-bottom: 6px; }
+  .form-control {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #e2e8f0;
+    border-radius: 8px; font-size: .9rem; font-family: inherit; outline: none; transition: border-color .2s;
+  }
+  .form-control:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .btn-auth {
+    width: 100%; padding: 12px; background: linear-gradient(135deg, #6366f1, #0ea5e9);
+    color: white; border: none; border-radius: 8px; font-size: .95rem; font-weight: 700;
+    cursor: pointer; transition: opacity .2s; margin-top: 8px;
+  }
+  .btn-auth:hover { opacity: .9; }
+  .auth-footer { text-align: center; margin-top: 20px; font-size: .875rem; color: #64748b; }
+  .auth-footer a { color: #6366f1; text-decoration: none; font-weight: 600; }
+  .errorlist { color: #ef4444; font-size: .8rem; margin-top: 4px; padding-left: 0; list-style: none; }
+  @media (max-width: 768px) { .auth-left { display: none; } .auth-right { width: 100%; } }
+</style>
+<div class="auth-bg">
+  <div class="auth-left">
+    <div class="auth-hero">
+      <h1>Make-Up Class Attendance System</h1>
+      <p>A smart solution for managing remedial sessions, tracking attendance, and gaining AI-powered insights.</p>
+      <ul class="feature-list">
+        <li><i class="fas fa-calendar-check"></i> Schedule makeup classes easily</li>
+        <li><i class="fas fa-key"></i> Unique remedial codes per session</li>
+        <li><i class="fas fa-clipboard-check"></i> Real-time attendance tracking</li>
+        <li><i class="fas fa-brain"></i> AI-powered scheduling & predictions</li>
+        <li><i class="fas fa-bell"></i> Automated notifications & alerts</li>
+      </ul>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="auth-logo-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div>
+          <div style="font-weight:800;font-size:1.1rem">EduTrack</div>
+          <div style="font-size:.7rem;color:#64748b">Makeup Attendance</div>
+        </div>
+      </div>
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-subtitle" style="margin-bottom:28px">Sign in to your account</p>
+
+      {% if form.non_field_errors %}
+      <div style="background:rgba(239,68,68,.1);color:#991b1b;padding:10px 14px;border-radius:8px;border-left:4px solid #ef4444;font-size:.875rem;margin-bottom:16px">
+        <i class="fas fa-exclamation-circle"></i> Invalid username or password.
+      </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Enter username" value="{{ form.username.value|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn-auth">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+      <div class="auth-footer">
+        Don't have an account? <a href="{% url 'register' %}">Create one</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

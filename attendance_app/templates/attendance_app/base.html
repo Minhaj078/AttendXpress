@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EduTrack – Makeup Class System{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ── Design Tokens ─────────────────────────── */
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a5b4fc;
+      --secondary: #0ea5e9;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface2: #f1f5f9;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+      --sidebar-w: 260px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Layout ────────────────────────────────── */
+    .app-wrapper { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-w); background: var(--surface);
+      border-right: 1px solid var(--border); position: fixed;
+      top: 0; left: 0; height: 100vh; overflow-y: auto;
+      display: flex; flex-direction: column; z-index: 100;
+      box-shadow: 2px 0 12px rgba(0,0,0,.04);
+    }
+    .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 64px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .content { padding: 28px; flex: 1; }
+
+    /* ── Sidebar Brand ─────────────────────────── */
+    .sidebar-brand {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text);
+    }
+    .brand-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px;
+    }
+    .brand-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -.3px; }
+    .brand-sub { font-size: .7rem; color: var(--text-muted); font-weight: 500; }
+
+    /* ── Sidebar Nav ───────────────────────────── */
+    .sidebar-nav { padding: 12px 12px; flex: 1; }
+    .nav-section-label {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); padding: 12px 8px 4px;
+    }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      color: var(--text-muted); text-decoration: none;
+      font-size: .875rem; font-weight: 500; margin-bottom: 2px;
+      transition: all .2s;
+    }
+    .nav-link:hover { background: var(--surface2); color: var(--primary); }
+    .nav-link.active { background: rgba(99,102,241,.1); color: var(--primary); font-weight: 600; }
+    .nav-link i { width: 18px; text-align: center; font-size: 14px; }
+    .nav-badge {
+      margin-left: auto; background: var(--danger);
+      color: white; font-size: .65rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+    }
+
+    /* ── Sidebar User ──────────────────────────── */
+    .sidebar-user {
+      padding: 14px 16px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: .875rem; flex-shrink: 0;
+    }
+    .user-name { font-size: .8rem; font-weight: 600; }
+    .user-role { font-size: .7rem; color: var(--text-muted); text-transform: capitalize; }
+    .logout-link { margin-left: auto; color: var(--text-muted); font-size: 14px; text-decoration: none; }
+    .logout-link:hover { color: var(--danger); }
+
+    /* ── Topbar ────────────────────────────────── */
+    .topbar-title { font-weight: 700; font-size: 1.1rem; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .icon-btn {
+      width: 38px; height: 38px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); cursor: pointer; text-decoration: none;
+      position: relative; transition: all .2s;
+    }
+    .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .icon-btn .dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--danger); border: 2px solid white;
+    }
+
+    /* ── Cards ─────────────────────────────────── */
+    .card {
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-size: .95rem; font-weight: 700; }
+    .card-body { padding: 22px; }
+
+    /* ── Stat Cards ─────────────────────────────── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      padding: 20px; display: flex; align-items: center; gap: 16px;
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .stat-icon.purple { background: rgba(99,102,241,.1); color: var(--primary); }
+    .stat-icon.blue { background: rgba(14,165,233,.1); color: var(--secondary); }
+    .stat-icon.green { background: rgba(16,185,129,.1); color: var(--success); }
+    .stat-icon.amber { background: rgba(245,158,11,.1); color: var(--accent); }
+    .stat-icon.red { background: rgba(239,68,68,.1); color: var(--danger); }
+    .stat-number { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+    .stat-label { font-size: .75rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+    /* ── Buttons ────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius-sm);
+      font-size: .875rem; font-weight: 600; cursor: pointer;
+      border: none; text-decoration: none; transition: all .2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-info { background: var(--info); color: white; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary); color: white; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 6px 12px; font-size: .8rem; }
+    .btn-lg { padding: 12px 24px; font-size: 1rem; }
+
+    /* ── Forms ──────────────────────────────────── */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-control {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font-size: .9rem; font-family: inherit;
+      background: var(--surface); color: var(--text); transition: border-color .2s;
+      outline: none;
+    }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+    .form-text { font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* ── Tables ─────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th { background: var(--surface2); padding: 12px 16px; text-align: left; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* ── Badges ─────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .2px;
+    }
+    .badge-scheduled { background: rgba(59,130,246,.1); color: var(--info); }
+    .badge-active { background: rgba(16,185,129,.15); color: var(--success); }
+    .badge-completed { background: rgba(100,116,139,.1); color: var(--text-muted); }
+    .badge-cancelled { background: rgba(239,68,68,.1); color: var(--danger); }
+    .badge-primary { background: rgba(99,102,241,.1); color: var(--primary); }
+
+    /* ── Alerts ─────────────────────────────────── */
+    .alert {
+      padding: 14px 18px; border-radius: var(--radius-sm);
+      margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;
+      font-size: .875rem;
+    }
+    .alert-success { background: rgba(16,185,129,.1); color: #065f46; border-left: 4px solid var(--success); }
+    .alert-error { background: rgba(239,68,68,.1); color: #991b1b; border-left: 4px solid var(--danger); }
+    .alert-warning { background: rgba(245,158,11,.1); color: #92400e; border-left: 4px solid var(--warning); }
+    .alert-info { background: rgba(59,130,246,.1); color: #1e40af; border-left: 4px solid var(--info); }
+
+    /* ── Code Display ───────────────────────────── */
+    .code-display {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; border-radius: var(--radius);
+      padding: 24px; text-align: center; margin: 16px 0;
+    }
+    .code-value {
+      font-size: 2.4rem; font-weight: 900; letter-spacing: 10px;
+      font-family: 'Courier New', monospace; margin: 8px 0;
+    }
+    .code-label { font-size: .8rem; opacity: .8; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Progress ───────────────────────────────── */
+    .progress { height: 8px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px; transition: width .4s; }
+
+    /* ── AI Badge ───────────────────────────────── */
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; font-size: .72rem; font-weight: 700;
+    }
+
+    /* ── Misc ───────────────────────────────────── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-title { font-size: 1.4rem; font-weight: 800; }
+    .page-subtitle { font-size: .875rem; color: var(--text-muted); margin-top: 2px; }
+    .text-muted { color: var(--text-muted); }
+    .text-center { text-align: center; }
+    .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+    .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+    .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+    .flex { display: flex; } .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .empty-state i { font-size: 3rem; opacity: .3; margin-bottom: 12px; }
+    .empty-state p { font-size: .9rem; }
+    .search-bar { position: relative; }
+    .search-bar input { padding-left: 38px; }
+    .search-bar i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .form-grid { grid-template-columns: 1fr; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="app-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="{% url 'dashboard' %}" class="brand-logo">
+        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div>
+          <div class="brand-text">EduTrack</div>
+          <div class="brand-sub">Makeup Attendance</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="fas fa-th-large"></i> Dashboard
+      </a>
+      <a href="{% url 'makeup_list' %}" class="nav-link {% if 'makeup' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-calendar-alt"></i> Makeup Classes
+      </a>
+      <a href="{% url 'course_list' %}" class="nav-link {% if 'course' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-book"></i> Courses
+      </a>
+
+      {% if request.user.profile.role == 'faculty' %}
+      <div class="nav-section-label">Faculty</div>
+      <a href="{% url 'schedule_makeup' %}" class="nav-link {% if request.resolver_match.url_name == 'schedule_makeup' %}active{% endif %}">
+        <i class="fas fa-plus-circle"></i> Schedule Class
+      </a>
+      <a href="{% url 'ai_analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'ai_analytics' %}active{% endif %}">
+        <i class="fas fa-brain"></i> AI Analytics
+        <span class="ai-badge" style="margin-left:auto; font-size:.6rem">AI</span>
+      </a>
+      {% else %}
+      <div class="nav-section-label">Student</div>
+      <a href="{% url 'mark_attendance' %}" class="nav-link {% if request.resolver_match.url_name == 'mark_attendance' %}active{% endif %}">
+        <i class="fas fa-qrcode"></i> Mark Attendance
+      </a>
+      <a href="{% url 'my_attendance' %}" class="nav-link {% if request.resolver_match.url_name == 'my_attendance' %}active{% endif %}">
+        <i class="fas fa-clipboard-check"></i> My Attendance
+      </a>
+      {% endif %}
+
+      <div class="nav-section-label">System</div>
+      <a href="{% url 'notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <i class="fas fa-bell"></i> Notifications
+        <span class="nav-badge" id="sidebar-notif-badge" style="display:none">0</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</div>
+      <div>
+        <div class="user-name">{{ request.user.get_full_name }}</div>
+        <div class="user-role">{{ request.user.profile.role }}</div>
+      </div>
+      <a href="{% url 'logout' %}" class="logout-link" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">{% block topbar_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-actions">
+        {% if request.user.profile.role == 'student' %}
+        <a href="{% url 'mark_attendance' %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-qrcode"></i> Mark Attendance
+        </a>
+        {% else %}
+        <a href="{% url 'schedule_makeup' %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus"></i> New Class
+        </a>
+        {% endif %}
+        <a href="{% url 'notifications' %}" class="icon-btn" id="notif-btn">
+          <i class="fas fa-bell"></i>
+          <span class="dot" id="notif-dot" style="display:none"></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="content">
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+        <span>{{ message|safe }}</span>
+      </div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script>
+// Poll for unread notification count
+async function updateNotifBadge() {
+  try {
+    const r = await fetch('/api/unread-count/');
+    const d = await r.json();
+    const badge = document.getElementById('sidebar-notif-badge');
+    const dot = document.getElementById('notif-dot');
+    if (d.count > 0) {
+      if (badge) { badge.textContent = d.count; badge.style.display = 'inline'; }
+      if (dot) dot.style.display = 'block';
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (dot) dot.style.display = 'none';
+    }
+  } catch(e) {}
+}
+{% if user.is_authenticated %}
+updateNotifBadge();
+setInterval(updateNotifBadge, 30000);
+{% endif %}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

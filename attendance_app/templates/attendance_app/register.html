@@ -1,0 +1,100 @@
+{% extends 'attendance_app/base.html' %}
+{% block auth_content %}
+<style>
+  .auth-bg { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0ea5e9 100%); padding: 40px 16px; }
+  .reg-box { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 560px; box-shadow: 0 24px 80px rgba(0,0,0,.2); }
+  .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+  .auth-logo-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #0ea5e9); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: .8rem; font-weight: 600; display: block; margin-bottom: 5px; }
+  .form-control { width: 100%; padding: 10px 13px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .875rem; font-family: inherit; outline: none; transition: border-color .2s; }
+  .form-control:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+  .role-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0; }
+  .role-btn { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; text-align: center; transition: all .2s; }
+  .role-btn input { display: none; }
+  .role-btn:has(input:checked) { border-color: #6366f1; background: rgba(99,102,241,.06); }
+  .role-btn i { display: block; font-size: 1.4rem; margin-bottom: 4px; }
+  .role-btn span { font-size: .8rem; font-weight: 600; }
+  .btn-auth { width: 100%; padding: 12px; background: linear-gradient(135deg, #6366f1, #0ea5e9); color: white; border: none; border-radius: 8px; font-size: .95rem; font-weight: 700; cursor: pointer; transition: opacity .2s; margin-top: 8px; }
+  .btn-auth:hover { opacity: .9; }
+  .auth-footer { text-align: center; margin-top: 16px; font-size: .875rem; color: #64748b; }
+  .auth-footer a { color: #6366f1; text-decoration: none; font-weight: 600; }
+  .errorlist { color: #ef4444; font-size: .76rem; margin: 3px 0 0; padding-left: 0; list-style: none; }
+  @media(max-width:480px){.form-grid{grid-template-columns:1fr}}
+</style>
+<div class="auth-bg">
+  <div class="reg-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div>
+        <div style="font-weight:800;font-size:1.1rem">EduTrack</div>
+        <div style="font-size:.7rem;color:#64748b">Create Account</div>
+      </div>
+    </div>
+    <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:4px">Join EduTrack</h2>
+    <p style="font-size:.875rem;color:#64748b;margin-bottom:24px">Fill in the details to create your account</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">I am a...</label>
+        <div class="role-toggle">
+          <label class="role-btn">
+            <input type="radio" name="role" value="faculty" {% if form.role.value == 'faculty' %}checked{% endif %}>
+            <i class="fas fa-chalkboard-teacher" style="color:#6366f1"></i>
+            <span>Faculty</span>
+          </label>
+          <label class="role-btn">
+            <input type="radio" name="role" value="student" checked>
+            <i class="fas fa-user-graduate" style="color:#0ea5e9"></i>
+            <span>Student</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" name="first_name" class="form-control" placeholder="John" value="{{ form.first_name.value|default:'' }}" required>
+          {{ form.first_name.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" name="last_name" class="form-control" placeholder="Doe" value="{{ form.last_name.value|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="johndoe" value="{{ form.username.value|default:'' }}" required>
+          {{ form.username.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" placeholder="john@college.edu" value="{{ form.email.value|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <input type="text" name="department" class="form-control" placeholder="Computer Science">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student ID / Employee ID</label>
+          <input type="text" name="student_id" class="form-control" placeholder="CS-2024-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password1" class="form-control" placeholder="Create password" required>
+          {{ form.password1.errors }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" name="password2" class="form-control" placeholder="Confirm password" required>
+          {{ form.password2.errors }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn-auth"><i class="fas fa-user-plus"></i> Create Account</button>
+    </form>
+    <div class="auth-footer">Already have an account? <a href="{% url 'login' %}">Sign in</a></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Add Course – EduTrack{% endblock %}
+{% block topbar_title %}Add Course{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div><h1 class="page-title">Add New Course</h1><p class="page-subtitle">Create a course for your students</p></div>
+  <a href="{% url 'course_list' %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div style="max-width:560px">
+  <div class="card">
+    <div class="card-header"><span class="card-title"><i class="fas fa-book-open" style="color:var(--primary)"></i> Course Details</span></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Course Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Data Structures and Algorithms" value="{{ form.name.value|default:'' }}" required>
+          {{ form.name.errors }}
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Course Code *</label>
+            <input type="text" name="code" class="form-control" placeholder="e.g. CS301" value="{{ form.code.value|default:'' }}" required>
+            {{ form.code.errors }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Semester</label>
+            <input type="text" name="semester" class="form-control" placeholder="Spring 2025" value="{{ form.semester.value|default:'' }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <input type="text" name="department" class="form-control" placeholder="Computer Science" value="{{ form.department.value|default:'' }}">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+          <i class="fas fa-plus-circle"></i> Create Course
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

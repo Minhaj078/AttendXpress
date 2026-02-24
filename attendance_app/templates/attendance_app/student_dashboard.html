@@ -1,0 +1,187 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Student Dashboard – EduTrack{% endblock %}
+{% block topbar_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Hello, {{ request.user.first_name }}! 🎓</h1>
+    <p class="page-subtitle">Track your makeup class attendance</p>
+  </div>
+  <a href="{% url 'mark_attendance' %}" class="btn btn-primary">
+    <i class="fas fa-qrcode"></i> Mark Attendance
+  </a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="fas fa-book"></i></div>
+    <div>
+      <div class="stat-number">{{ enrolled_courses.count }}</div>
+      <div class="stat-label">Enrolled Courses</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-clipboard-check"></i></div>
+    <div>
+      <div class="stat-number">{{ my_attendance }}</div>
+      <div class="stat-label">Classes Attended</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-chart-pie"></i></div>
+    <div>
+      <div class="stat-number">{{ attendance_rate }}%</div>
+      <div class="stat-label">Attendance Rate</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="fas fa-bell"></i></div>
+    <div>
+      <div class="stat-number">{{ unread_count }}</div>
+      <div class="stat-label">Notifications</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Upcoming Makeup Classes -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-calendar-alt" style="color:var(--primary)"></i> Upcoming Sessions</span>
+      <a href="{% url 'makeup_list' %}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if upcoming_classes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Session</th><th>Course</th><th>Date & Time</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for cls in upcoming_classes %}
+          <tr>
+            <td style="font-weight:600;font-size:.875rem">{{ cls.title }}</td>
+            <td><span class="badge badge-primary">{{ cls.course.code }}</span></td>
+            <td>
+              <div style="font-size:.85rem">{{ cls.scheduled_date|date:"M d" }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted)">{{ cls.start_time|time:"h:i A" }}</div>
+            </td>
+            <td>
+              {% if cls.status == 'active' %}
+              <span class="badge badge-active"><i class="fas fa-circle" style="font-size:.5rem"></i> Active</span>
+              {% else %}
+              <span class="badge badge-scheduled">{{ cls.get_status_display }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-calendar"></i><p>No upcoming makeup classes</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Mark Attendance -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-qrcode" style="color:var(--success)"></i> Quick Attendance</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">Enter the remedial code provided by your faculty to mark your attendance for a makeup class.</p>
+      <form action="{% url 'mark_attendance' %}" method="get">
+        <a href="{% url 'mark_attendance' %}" class="btn btn-success" style="width:100%;justify-content:center">
+          <i class="fas fa-keyboard"></i> Enter Remedial Code
+        </a>
+      </form>
+      <hr class="divider">
+      <div style="background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(14,165,233,.08));border-radius:10px;padding:14px">
+        <div style="font-size:.75rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+          <i class="fas fa-lightbulb"></i> How it works
+        </div>
+        <ol style="font-size:.8rem;color:var(--text-muted);padding-left:16px;line-height:2">
+          <li>Faculty activates the session</li>
+          <li>You receive a notification with the code</li>
+          <li>Enter the 8-character code here</li>
+          <li>Attendance is recorded instantly</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enrolled Courses -->
+<div class="card mt-4">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-book-open" style="color:var(--secondary)"></i> My Courses</span>
+    <button onclick="document.getElementById('enroll-modal').style.display='flex'" class="btn btn-ghost btn-sm">
+      <i class="fas fa-plus"></i> Enroll
+    </button>
+  </div>
+  <div class="card-body" style="padding:0">
+    {% if enrolled_courses %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Code</th><th>Course Name</th><th>Faculty</th><th>Department</th></tr></thead>
+        <tbody>
+        {% for course in enrolled_courses %}
+        <tr>
+          <td><span class="badge badge-primary">{{ course.code }}</span></td>
+          <td style="font-weight:600">{{ course.name }}</td>
+          <td>{{ course.faculty.get_full_name }}</td>
+          <td style="color:var(--text-muted)">{{ course.department }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-book"></i><p>Not enrolled in any courses yet</p>
+      <button onclick="document.getElementById('enroll-modal').style.display='flex'" class="btn btn-primary btn-sm mt-3">Enroll in a Course</button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Enroll Modal -->
+<div id="enroll-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:6px">Enroll in a Course</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:20px">Enter the course code provided by your faculty</p>
+    <div class="form-group">
+      <label class="form-label">Course Code</label>
+      <input type="text" id="enroll-code" class="form-control" placeholder="e.g. CS301" style="text-transform:uppercase">
+    </div>
+    <div id="enroll-result"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="enrollCourse()" class="btn btn-primary" style="flex:1">Enroll</button>
+      <button onclick="document.getElementById('enroll-modal').style.display='none'" class="btn btn-ghost" style="flex:1">Cancel</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+async function enrollCourse() {
+  const code = document.getElementById('enroll-code').value.trim().toUpperCase();
+  const resultDiv = document.getElementById('enroll-result');
+  if (!code) return;
+
+  const formData = new FormData();
+  formData.append('course_code', code);
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  const r = await fetch('{% url "enroll_course" %}', { method: 'POST', body: formData });
+  const d = await r.json();
+
+  if (d.success) {
+    resultDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> Enrolled in ${d.course}!</div>`;
+    setTimeout(() => location.reload(), 1500);
+  } else {
+    resultDiv.innerHTML = `<div class="alert alert-error"><i class="fas fa-times-circle"></i> ${d.error}</div>`;
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

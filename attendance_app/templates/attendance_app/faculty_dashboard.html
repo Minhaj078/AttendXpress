@@ -1,0 +1,153 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Faculty Dashboard – EduTrack{% endblock %}
+{% block topbar_title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Welcome back, {{ request.user.first_name }}! 👋</h1>
+    <p class="page-subtitle">Manage your makeup classes and track student attendance</p>
+  </div>
+  <a href="{% url 'schedule_makeup' %}" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Schedule Makeup Class
+  </a>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon purple"><i class="fas fa-book"></i></div>
+    <div>
+      <div class="stat-number">{{ courses.count }}</div>
+      <div class="stat-label">Courses</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div>
+    <div>
+      <div class="stat-number">{{ total_makeup }}</div>
+      <div class="stat-label">Makeup Sessions</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fas fa-users"></i></div>
+    <div>
+      <div class="stat-number">{{ total_students }}</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="fas fa-bell"></i></div>
+    <div>
+      <div class="stat-number">{{ unread_count }}</div>
+      <div class="stat-label">Unread Alerts</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Upcoming Classes -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-calendar-check" style="color:var(--primary)"></i> Upcoming Classes</span>
+      <a href="{% url 'makeup_list' %}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if upcoming_classes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Class</th><th>Date</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          {% for cls in upcoming_classes %}
+          <tr>
+            <td>
+              <div style="font-weight:600;font-size:.875rem">{{ cls.title }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted)">{{ cls.course.code }}</div>
+            </td>
+            <td>
+              <div style="font-size:.85rem">{{ cls.scheduled_date|date:"M d, Y" }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted)">{{ cls.start_time|time:"h:i A" }}</div>
+            </td>
+            <td><span class="badge badge-{{ cls.status }}">{{ cls.get_status_display }}</span></td>
+            <td><a href="{% url 'makeup_detail' cls.pk %}" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i></a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-calendar-times"></i><p>No upcoming classes scheduled</p><a href="{% url 'schedule_makeup' %}" class="btn btn-primary btn-sm mt-3">Schedule Now</a></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- My Courses -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="fas fa-book-open" style="color:var(--secondary)"></i> My Courses</span>
+      <a href="{% url 'add_course' %}" class="btn btn-ghost btn-sm"><i class="fas fa-plus"></i> Add</a>
+    </div>
+    <div class="card-body" style="padding:0">
+      {% if courses %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Course Name</th><th>Students</th></tr></thead>
+          <tbody>
+          {% for course in courses %}
+          <tr>
+            <td><span class="badge badge-primary">{{ course.code }}</span></td>
+            <td>
+              <div style="font-weight:600;font-size:.875rem">{{ course.name }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted)">{{ course.department }}</div>
+            </td>
+            <td>
+              <div style="font-weight:600">{{ course.students.count }}</div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fas fa-book"></i><p>No courses added yet</p><a href="{% url 'add_course' %}" class="btn btn-primary btn-sm mt-3">Add Course</a></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Recent Classes -->
+{% if recent_classes %}
+<div class="card mt-4">
+  <div class="card-header">
+    <span class="card-title"><i class="fas fa-history" style="color:var(--success)"></i> Recently Completed</span>
+  </div>
+  <div class="card-body" style="padding:0">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Session</th><th>Course</th><th>Date</th><th>Attendance</th><th>Code</th></tr></thead>
+        <tbody>
+        {% for cls in recent_classes %}
+        <tr>
+          <td style="font-weight:600">{{ cls.title }}</td>
+          <td>{{ cls.course.code }}</td>
+          <td>{{ cls.scheduled_date|date:"M d, Y" }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-weight:600">{{ cls.attendance_count }}</span>
+              <div class="progress" style="width:80px">
+                {% widthratio cls.attendance_count cls.course.students.count|default:1 100 as pct %}
+                <div class="progress-bar" style="width:{{ pct }}%"></div>
+              </div>
+              <span style="font-size:.75rem;color:var(--text-muted)">{{ pct }}%</span>
+            </div>
+          </td>
+          <td><code style="background:var(--surface2);padding:3px 8px;border-radius:4px;font-size:.8rem">{{ cls.remedial_code }}</code></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

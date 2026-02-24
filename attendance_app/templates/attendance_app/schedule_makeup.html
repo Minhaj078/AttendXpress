@@ -1,0 +1,223 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Schedule Makeup Class – EduTrack{% endblock %}
+{% block topbar_title %}Schedule Makeup Class{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Schedule Makeup Class</h1>
+    <p class="page-subtitle">Create a new makeup session with auto-generated remedial code</p>
+  </div>
+  <a href="{% url 'makeup_list' %}" class="btn btn-ghost">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+</div>
+
+<div class="grid-2" style="align-items:start">
+
+  <!-- Form -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">
+        <i class="fas fa-calendar-plus" style="color:var(--primary)"></i>
+        Session Details
+      </span>
+    </div>
+
+    <div class="card-body">
+      <form method="post" id="schedule-form">
+        {% csrf_token %}
+
+        <!-- Course -->
+        <div class="form-group">
+          <label class="form-label">Course *</label>
+          {{ form.course }}
+          {% if form.course.errors %}
+            <div class="alert alert-error">{{ form.course.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Title -->
+        <div class="form-group">
+          <label class="form-label">Session Title *</label>
+          {{ form.title }}
+          {% if form.title.errors %}
+            <div class="alert alert-error">{{ form.title.errors }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Reason -->
+        <div class="form-group">
+          <label class="form-label">Reason for Makeup</label>
+          {{ form.reason }}
+        </div>
+
+        <!-- Date / Venue / Time -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            {{ form.scheduled_date }}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Venue / Room *</label>
+            {{ form.venue }}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Start Time *</label>
+            {{ form.start_time }}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">End Time *</label>
+            {{ form.end_time }}
+          </div>
+        </div>
+
+        <!-- Max Attendance -->
+        <div class="form-group">
+          <label class="form-label">Max Attendance</label>
+          {{ form.max_attendance }}
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">Description (Optional)</label>
+          {{ form.description }}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-error">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <button type="submit"
+                class="btn btn-primary"
+                style="width:100%;justify-content:center">
+          <i class="fas fa-calendar-check"></i>
+          Schedule & Generate Code
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div>
+
+    <!-- Remedial Code Info -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <span class="card-title">
+          <i class="fas fa-key" style="color:var(--accent)"></i>
+          Auto Code Generation
+        </span>
+      </div>
+      <div class="card-body">
+
+        <div style="background:linear-gradient(135deg,var(--primary),var(--secondary));
+                    border-radius:12px;padding:20px;color:white;
+                    text-align:center;margin-bottom:14px">
+
+          <div style="font-size:.75rem;opacity:.8;
+                      letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">
+            Remedial Code
+          </div>
+
+          <div style="font-size:2rem;font-weight:900;
+                      letter-spacing:8px;
+                      font-family:'Courier New',monospace"
+               id="preview-code">
+            ????????
+          </div>
+
+          <div style="font-size:.75rem;opacity:.7;margin-top:6px">
+            Generated upon scheduling
+          </div>
+        </div>
+
+        <ul style="font-size:.8rem;color:var(--text-muted);
+                   list-style:none;line-height:2.2">
+          <li><i class="fas fa-check-circle" style="color:var(--success)"></i> Unique 8-character code per session</li>
+          <li><i class="fas fa-check-circle" style="color:var(--success)"></i> Expires 1 hour after class ends</li>
+          <li><i class="fas fa-check-circle" style="color:var(--success)"></i> Faculty activates when ready</li>
+          <li><i class="fas fa-check-circle" style="color:var(--success)"></i> Students notified automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">
+          <i class="fas fa-brain" style="color:#8b5cf6"></i>
+          AI Recommendations
+        </span>
+      </div>
+
+      <div class="card-body">
+
+        <button type="button"
+                class="btn btn-secondary"
+                style="margin-bottom:12px"
+                onclick="loadAIRecommendations()">
+          Get AI Suggestions
+        </button>
+
+        {% if ai_recommendations %}
+          {% for rec in ai_recommendations %}
+          <div style="border:1.5px solid var(--border);
+                      border-radius:10px;padding:12px;
+                      margin-bottom:8px;cursor:pointer"
+               onclick="fillSlot('{{ rec.date }}','{{ rec.start_time }}','{{ rec.end_time }}')">
+
+            <div style="font-weight:600;font-size:.875rem">
+              {{ rec.day }}, {{ rec.date }}
+            </div>
+            <div style="font-size:.75rem;color:var(--text-muted)">
+              {{ rec.start_time }} – {{ rec.end_time }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color:var(--text-muted)">
+            Click "Get AI Suggestions" to see recommendations.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function fillSlot(date, start, end) {
+  document.querySelector('[name="scheduled_date"]').value = date;
+  document.querySelector('[name="start_time"]').value = start;
+  document.querySelector('[name="end_time"]').value = end;
+}
+
+function loadAIRecommendations() {
+  const courseId = document.getElementById("id_course").value;
+  if (!courseId) {
+    alert("Please select a course first.");
+    return;
+  }
+  window.location.href = `?course=${courseId}`;
+}
+
+// Code animation preview
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+setInterval(() => {
+  const el = document.getElementById('preview-code');
+  if (el) {
+    el.textContent = Array.from({length: 8}, () =>
+      chars[Math.floor(Math.random()*chars.length)]
+    ).join('');
+  }
+}, 400);
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Mark Attendance – EduTrack{% endblock %}
+{% block topbar_title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div style="max-width:540px;margin:0 auto">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mark Attendance</h1>
+      <p class="page-subtitle">Enter your remedial code to record attendance</p>
+    </div>
+  </div>
+
+  <!-- Result Banner -->
+  {% if result %}
+  <div class="alert alert-{{ result.status == 'success' and 'success' or result.status == 'warning' and 'warning' or 'error' }}" style="font-size:1rem;padding:16px 20px">
+    {% if result.status == 'success' %}
+    <i class="fas fa-check-circle" style="font-size:1.5rem"></i>
+    {% elif result.status == 'warning' %}
+    <i class="fas fa-exclamation-triangle" style="font-size:1.5rem"></i>
+    {% else %}
+    <i class="fas fa-times-circle" style="font-size:1.5rem"></i>
+    {% endif %}
+    <div>
+      <div style="font-weight:700">{{ result.message }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Code Entry Card -->
+  <div class="card mb-4">
+    <div class="card-body" style="padding:32px">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:white;font-size:2rem">
+          <i class="fas fa-key"></i>
+        </div>
+        <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">Enter Remedial Code</h2>
+        <p style="font-size:.875rem;color:var(--text-muted)">The 8-character code shared by your faculty</p>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          {{ form.remedial_code }}
+          {% if form.remedial_code.errors %}
+          <div style="color:var(--danger);font-size:.8rem;margin-top:4px">{{ form.remedial_code.errors }}</div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-success btn-lg" style="width:100%;justify-content:center">
+          <i class="fas fa-clipboard-check"></i> Submit Attendance
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:20px">
+        <i class="fas fa-bell" style="font-size:1.8rem;color:var(--primary);margin-bottom:10px;display:block"></i>
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Check Notifications</div>
+        <p style="font-size:.78rem;color:var(--text-muted)">Your remedial code will be sent via notification when the session activates</p>
+        <a href="{% url 'notifications' %}" class="btn btn-outline btn-sm mt-3">View Notifications</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:20px">
+        <i class="fas fa-history" style="font-size:1.8rem;color:var(--success);margin-bottom:10px;display:block"></i>
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:4px">Attendance History</div>
+        <p style="font-size:.78rem;color:var(--text-muted)">View all your past makeup class attendance records</p>
+        <a href="{% url 'my_attendance' %}" class="btn btn-outline btn-sm mt-3">View Records</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Auto uppercase code input
+const codeInput = document.querySelector('[name="remedial_code"]');
+if (codeInput) {
+  codeInput.addEventListener('input', function() {
+    const pos = this.selectionStart;
+    this.value = this.value.toUpperCase();
+    this.setSelectionRange(pos, pos);
+  });
+  codeInput.focus();
+}
+</script>
+{% endblock %}
+{% endblock %}

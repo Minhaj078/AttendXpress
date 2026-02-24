@@ -1,0 +1,50 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}Courses – EduTrack{% endblock %}
+{% block topbar_title %}Courses{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Courses</h1>
+    <p class="page-subtitle">{% if profile.role == 'faculty' %}Manage your courses{% else %}Enrolled courses{% endif %}</p>
+  </div>
+  {% if profile.role == 'faculty' %}
+  <a href="{% url 'add_course' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Course</a>
+  {% endif %}
+</div>
+
+{% if courses %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+  {% for course in courses %}
+  <div class="card" style="transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+    <div class="card-body">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <span class="badge badge-primary" style="font-size:.85rem">{{ course.code }}</span>
+        <span style="font-size:.75rem;color:var(--text-muted)">{{ course.semester }}</span>
+      </div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:6px">{{ course.name }}</h3>
+      <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:14px">{{ course.department }}</p>
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-muted);margin-bottom:14px">
+        <span><i class="fas fa-users" style="color:var(--success)"></i> {{ course.students.count }} students</span>
+        <span><i class="fas fa-calendar-alt" style="color:var(--primary)"></i> {{ course.makeup_classes.count }} sessions</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+        <i class="fas fa-chalkboard-teacher" style="color:var(--secondary)"></i>
+        {{ course.faculty.get_full_name }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state" style="padding:64px">
+    <i class="fas fa-book"></i>
+    <p>{% if profile.role == 'faculty' %}No courses added yet{% else %}Not enrolled in any courses{% endif %}</p>
+    {% if profile.role == 'faculty' %}
+    <a href="{% url 'add_course' %}" class="btn btn-primary btn-sm mt-3">Add Your First Course</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

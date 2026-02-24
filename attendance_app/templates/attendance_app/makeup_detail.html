@@ -1,0 +1,267 @@
+{% extends 'attendance_app/base.html' %}
+{% block title %}{{ makeup.title }} – EduTrack{% endblock %}
+{% block topbar_title %}Class Detail{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ makeup.title }}</h1>
+    <p class="page-subtitle">{{ makeup.course.code }} – {{ makeup.course.name }}</p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="{% url 'makeup_list' %}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+    {% if profile.role == 'faculty' and makeup.faculty == request.user %}
+      {% if makeup.status == 'scheduled' %}
+      <form method="post" action="{% url 'activate_code' makeup.pk %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success"><i class="fas fa-play"></i> Activate Code</button>
+      </form>
+      {% elif makeup.status == 'active' %}
+      <form method="post" action="{% url 'complete_class' makeup.pk %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-info"><i class="fas fa-stop"></i> Mark Complete</button>
+      </form>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2" style="align-items:start">
+  <!-- Main Info -->
+  <div>
+    <!-- Status + Code Card -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <span class="badge badge-{{ makeup.status }}" style="font-size:.8rem;padding:6px 14px">
+            {% if makeup.status == 'active' %}<i class="fas fa-circle" style="font-size:.5rem;animation:pulse 1s infinite"></i>{% endif %}
+            {{ makeup.get_status_display }}
+          </span>
+          {% if makeup.predicted_attendance %}
+          <span style="font-size:.8rem;color:var(--text-muted)">
+            <i class="fas fa-chart-line" style="color:var(--primary)"></i>
+            AI Prediction: ~{{ makeup.predicted_attendance }} students
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Remedial Code Display -->
+        {% if profile.role == 'faculty' %}
+        <div class="code-display">
+          <div class="code-label">Remedial Code</div>
+          <div class="code-value" id="code-display">{{ makeup.remedial_code }}</div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+            <button onclick="copyCode('{{ makeup.remedial_code }}')" class="btn btn-ghost btn-sm" style="color:white;border-color:rgba(255,255,255,.4)">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+            {% if makeup.status != 'completed' %}
+            <button onclick="regenerateCode({{ makeup.pk }})" class="btn btn-ghost btn-sm" style="color:white;border-color:rgba(255,255,255,.4)">
+              <i class="fas fa-sync"></i> New Code
+            </button>
+            {% endif %}
+          </div>
+          {% if makeup.code_expiry %}
+          <div style="font-size:.75rem;opacity:.7;margin-top:8px">
+            <i class="fas fa-clock"></i> Expires: {{ makeup.code_expiry|date:"M d, Y H:i" }}
+          </div>
+          {% endif %}
+        </div>
+        {% elif profile.role == 'student' %}
+          {% if my_record and my_record.is_present %}
+          <div style="background:rgba(16,185,129,.1);border:1.5px solid var(--success);border-radius:12px;padding:20px;text-align:center">
+            <i class="fas fa-check-circle" style="font-size:2rem;color:var(--success);margin-bottom:8px;display:block"></i>
+            <div style="font-weight:700;font-size:1rem;color:var(--success)">Attendance Marked!</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">{{ my_record.marked_at|date:"M d, Y H:i" }}</div>
+          </div>
+          {% elif makeup.status == 'active' %}
+          <div style="background:rgba(245,158,11,.1);border:1.5px solid var(--warning);border-radius:12px;padding:20px;text-align:center">
+            <i class="fas fa-exclamation-circle" style="font-size:2rem;color:var(--warning);margin-bottom:8px;display:block"></i>
+            <div style="font-weight:700;font-size:1rem">Session is Active</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:4px">Enter the code from your faculty to mark attendance</div>
+            <a href="{% url 'mark_attendance' %}" class="btn btn-success btn-sm mt-3"><i class="fas fa-keyboard"></i> Enter Code Now</a>
+          </div>
+          {% endif %}
+        {% endif %}
+
+        <!-- Class Info Grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+          <div style="background:var(--surface2);border-radius:10px;padding:12px">
+            <div style="font-size:.7rem;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:4px"><i class="fas fa-calendar"></i> Date</div>
+            <div style="font-weight:600">{{ makeup.scheduled_date|date:"F j, Y" }}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px">
+            <div style="font-size:.7rem;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:4px"><i class="fas fa-clock"></i> Time</div>
+            <div style="font-weight:600">{{ makeup.start_time|time:"h:i A" }} – {{ makeup.end_time|time:"h:i A" }}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px">
+            <div style="font-size:.7rem;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:4px"><i class="fas fa-map-marker-alt"></i> Venue</div>
+            <div style="font-weight:600">{{ makeup.venue }}</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px">
+            <div style="font-size:.7rem;text-transform:uppercase;font-weight:700;color:var(--text-muted);margin-bottom:4px"><i class="fas fa-users"></i> Enrolled</div>
+            <div style="font-weight:600">{{ enrolled_count }} students</div>
+          </div>
+        </div>
+
+        {% if makeup.reason %}
+        <div style="margin-top:12px;background:rgba(59,130,246,.06);border-left:3px solid var(--info);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-size:.75rem;font-weight:700;color:var(--info)">Reason</div>
+          <div style="font-size:.875rem;margin-top:3px">{{ makeup.reason }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- AI Insights (faculty) -->
+    {% if profile.role == 'faculty' and ai_insights and ai_insights.insights %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-brain" style="color:#8b5cf6"></i> AI Insights</span>
+        <span class="ai-badge"><i class="fas fa-robot"></i> AI</span>
+      </div>
+      <div class="card-body">
+        {% for insight in ai_insights.insights %}
+        <div class="alert alert-{{ insight.severity }}" style="margin-bottom:10px">
+          {{ insight.icon }} {{ insight.text }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Attendance Panel (Faculty) -->
+  {% if profile.role == 'faculty' %}
+  <div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-chart-pie" style="color:var(--success)"></i> Attendance Overview</span>
+        <span id="attendance-stats" style="font-size:.8rem;color:var(--text-muted)">{{ makeup.attendance_count }} / {{ enrolled_count }}</span>
+      </div>
+      <div class="card-body">
+        <canvas id="attendanceChart" width="300" height="220"></canvas>
+        <div class="progress mt-3">
+          <div class="progress-bar" id="progress-bar" style="width:{% widthratio makeup.attendance_count enrolled_count|default:1 100 %}%"></div>
+        </div>
+        <div style="text-align:center;font-size:.8rem;color:var(--text-muted);margin-top:8px" id="rate-display">
+          {% widthratio makeup.attendance_count enrolled_count|default:1 100 as rate %}{{ rate }}% attendance rate
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-list" style="color:var(--info)"></i> Student Records</span>
+        <span style="font-size:.8rem;background:var(--surface2);padding:4px 10px;border-radius:20px">{{ attendance_records.count }} marked</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        {% if attendance_records %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Time</th><th>Method</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for record in attendance_records %}
+            <tr>
+              <td>
+                <div style="font-weight:600;font-size:.875rem">{{ record.student.get_full_name }}</div>
+                <div style="font-size:.75rem;color:var(--text-muted)">{{ record.student.username }}</div>
+              </td>
+              <td style="font-size:.8rem;color:var(--text-muted)">{{ record.marked_at|date:"h:i A" }}</td>
+              <td>
+                {% if record.verification_method == 'code' %}
+                <span class="badge badge-primary"><i class="fas fa-key"></i> Code</span>
+                {% elif record.verification_method == 'face' %}
+                <span class="badge" style="background:rgba(139,92,246,.1);color:#7c3aed"><i class="fas fa-camera"></i> Face</span>
+                {% else %}
+                <span class="badge badge-scheduled">Manual</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if record.is_present %}
+                <span class="badge badge-active"><i class="fas fa-check"></i> Present</span>
+                {% else %}
+                <span class="badge badge-cancelled">Absent</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fas fa-users"></i><p>No attendance records yet</p></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+{% if profile.role == 'faculty' %}
+async function loadChart() {
+  const r = await fetch('/api/attendance-chart/{{ makeup.pk }}/');
+  const d = await r.json();
+  const ctx = document.getElementById('attendanceChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Present', 'Absent'],
+      datasets: [{
+        data: [d.present, d.absent],
+        backgroundColor: ['#10b981', '#e2e8f0'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } }
+      }
+    }
+  });
+  document.getElementById('attendance-stats').textContent = `${d.present} / ${d.enrolled}`;
+  document.getElementById('progress-bar').style.width = d.rate + '%';
+  document.getElementById('rate-display').textContent = `${d.rate}% attendance rate`;
+}
+loadChart();
+// Refresh if active
+{% if makeup.status == 'active' %}
+setInterval(loadChart, 10000);
+{% endif %}
+{% endif %}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = event.target.closest('button');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+}
+
+async function regenerateCode(pk) {
+  if (!confirm('Generate a new remedial code? The old code will become invalid.')) return;
+  const r = await fetch(`/makeup/${pk}/regenerate-code/`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'}
+  });
+  const d = await r.json();
+  if (d.success) {
+    document.getElementById('code-display').textContent = d.code;
+    document.getElementById('code-display').style.animation = 'none';
+    setTimeout(() => document.getElementById('code-display').style.animation = '', 100);
+  }
+}
+</script>
+<style>
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+</style>
+{% endblock %}
+{% endblock %}
