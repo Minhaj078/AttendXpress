@@ -114,3 +114,32 @@ makeup_attendance/
 - **Charts**: Chart.js 4.x
 - **Icons**: Font Awesome 6
 - **Fonts**: Inter (Google Fonts)
+
+---
+
+## 📸 Application Snapshots
+
+### 🏠 Dashboard
+![Dashboard](SnapShots/Dashboard.png)
+
+---
+
+### 📊 AI Analytics
+![AI Analytics](SnapShots/Ai_Analytics.png)
+
+---
+
+### 📚 Courses Section
+![Courses Section](SnapShots/Courses_Section.png)
+
+---
+
+### 📝 Make-Up Classes Section
+![MakeUp Classes](SnapShots/MakeUp Classes section.png)
+
+---
+
+### 🔐 Remedial Code Section
+![Remedial Section](SnapShots/Remedial_Section.png)
+
+---
